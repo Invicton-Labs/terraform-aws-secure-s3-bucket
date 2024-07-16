@@ -2,13 +2,42 @@ resource "aws_s3_bucket" "this" {
   bucket              = "${var.name}${var.append_region_suffix ? "-${data.aws_region.current.name}" : ""}"
   object_lock_enabled = var.object_lock_enabled
   force_destroy       = var.force_destroy
+  tags                = var.tags_s3_bucket
+}
+
+resource "terraform_data" "mfa_delete_serial_number" {
+  input = var.mfa_delete_serial_number
+}
+
+module "assert_mfa_delete_parameters" {
+  source        = "Invicton-Labs/assertion/null"
+  version       = "~>0.2.5"
+  condition     = var.mfa_delete_enabled ? (var.mfa_delete_serial_number != null && var.mfa_delete_token_code != null) : true
+  error_message = "If the `mfa_delete_enabled` variable is `true`, both the `mfa_delete_serial_number` and `mfa_delete_token_code` variables must be provided."
 }
 
 resource "aws_s3_bucket_versioning" "this" {
-  bucket = aws_s3_bucket.this.id
+  depends_on = [
+    module.assert_mfa_delete_parameters
+  ]
+  bucket                = aws_s3_bucket.this.id
+  expected_bucket_owner = data.aws_caller_identity.current.account_id
   versioning_configuration {
     status     = var.versioned ? "Enabled" : "Suspended"
     mfa_delete = var.mfa_delete_enabled ? "Enabled" : "Disabled"
+  }
+  mfa = var.mfa_delete_enabled ? "${var.mfa_delete_serial_number} ${var.mfa_delete_token_code}" : null
+  lifecycle {
+    ignore_changes = [
+      // We ignore MFA as a field because it includes the 
+      // MFA token code, which rotates regularly.
+      mfa,
+    ]
+    replace_triggered_by = [
+      // Since we're ignoring the MFA field, we explicitly trigger
+      // a replace if the MFA delete device serial number changes.
+      terraform_data.mfa_delete_serial_number
+    ]
   }
 }
 
@@ -16,7 +45,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
   depends_on = [
     aws_s3_bucket_versioning.this
   ]
-  bucket = aws_s3_bucket.this.id
+  bucket                = aws_s3_bucket.this.id
+  expected_bucket_owner = data.aws_caller_identity.current.account_id
   rule {
     bucket_key_enabled = local.used_kms_key_arn == null ? null : true
     apply_server_side_encryption_by_default {
@@ -228,14 +258,33 @@ resource "aws_s3_bucket_policy" "this" {
   policy = data.aws_iam_policy_document.this.json
 }
 
+resource "aws_s3_bucket_cors_configuration" "this" {
+  count                 = length(var.cors_rules) > 0 ? 1 : 0
+  depends_on            = [aws_s3_bucket_policy.this]
+  bucket                = aws_s3_bucket.this.id
+  expected_bucket_owner = data.aws_caller_identity.current.account_id
+  dynamic "cors_rule" {
+    for_each = var.cors_rules
+    content {
+      allowed_headers = cors_rule.value.allowed_headers
+      allowed_methods = cors_rule.value.allowed_methods
+      allowed_origins = cors_rule.value.allowed_origins
+      expose_headers  = cors_rule.value.expose_headers
+      id              = cors_rule.value.id
+      max_age_seconds = cors_rule.value.max_age_seconds
+    }
+  }
+}
+
 // Enable acceleration if desired. We do it this way (only create the resource
 // if acceleration is enabled) because some regions don't support transfer
 // acceleration, even if we try to set it to "Suspended".
 resource "aws_s3_bucket_accelerate_configuration" "this" {
   count = var.enable_transfer_acceleration ? 1 : 0
   depends_on = [
-    aws_s3_bucket_policy.this
+    aws_s3_bucket_cors_configuration.this
   ]
-  bucket = aws_s3_bucket.this.id
-  status = "Enabled"
+  expected_bucket_owner = data.aws_caller_identity.current.account_id
+  bucket                = aws_s3_bucket.this.id
+  status                = "Enabled"
 }

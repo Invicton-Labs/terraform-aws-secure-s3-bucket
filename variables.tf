@@ -17,6 +17,20 @@ variable "mfa_delete_enabled" {
   nullable    = false
 }
 
+variable "mfa_delete_serial_number" {
+  description = "The serial number of the MFA device to use for MFA delete."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "mfa_delete_token_code" {
+  description = "The token code currently showing on the MFA device to use for MFA delete."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
 variable "bucket_policy_json_documents" {
   description = "A list of JSON-encoded policy documents to apply to the bucket. The placeholder \"{BUCKET_ARN}\" can be used to reference the ARN of the bucket the policy is being applied to."
   type        = list(string)
@@ -119,4 +133,25 @@ variable "force_allow_cloudtrail_digest" {
   type        = bool
   default     = false
   nullable    = false
+}
+
+variable "cors_rules" {
+  description = "A list of CORS rules to apply to the S3 bucket."
+  type = list(object({
+    allowed_headers = optional(list(string))
+    allowed_methods = list(string)
+    allowed_origins = list(string)
+    expose_headers  = optional(list(string))
+    id              = optional(string)
+    max_age_seconds = optional(number)
+  }))
+  nullable = false
+  default  = []
+}
+
+variable "tags_s3_bucket" {
+  description = "A map of tags to apply to the S3 bucket."
+  type        = map(string)
+  nullable    = true
+  default     = null
 }

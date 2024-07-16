@@ -13,6 +13,14 @@ output "mfa_delete_enabled" {
   description = "The value of the `mfa_delete_enabled` input variable, or the default value if the input was `null`."
   value       = var.mfa_delete_enabled
 }
+output "mfa_delete_serial_number" {
+  description = "The value of the `mfa_delete_serial_number` input variable."
+  value       = var.mfa_delete_serial_number
+}
+output "mfa_delete_token_code" {
+  description = "The value of the `mfa_delete_token_code` input variable."
+  value       = var.mfa_delete_token_code
+}
 output "object_lock_enabled" {
   description = "The value of the `object_lock_enabled` input variable, or the default value if the input was `null`."
   value       = var.object_lock_enabled
@@ -68,6 +76,10 @@ output "append_region_suffix" {
 output "force_allow_cloudtrail_digest" {
   description = "The value of the `force_allow_cloudtrail_digest` input variable, or the default value if the input was `null`."
   value       = var.force_allow_cloudtrail_digest
+}
+output "tags_s3_bucket" {
+  description = "The value of the `tags_s3_bucket` input variable."
+  value       = var.tags_s3_bucket
 }
 
 //==================================================
