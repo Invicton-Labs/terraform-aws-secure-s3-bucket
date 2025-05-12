@@ -135,6 +135,13 @@ variable "force_allow_cloudtrail_digest" {
   nullable    = false
 }
 
+variable "enable_shield_drt_access" {
+  description = "Whether to add a policy for Shield Advanced DRT access. If the `aws_shield_drt_access_log_bucket_association` resource is used for this bucket, it will modify the bucket policy. This variable causes the same policy to be added, preventing them from conflicting."
+  type        = bool
+  default     = false
+  nullable    = false
+}
+
 variable "cors_rules" {
   description = "A list of CORS rules to apply to the S3 bucket."
   type = list(object({

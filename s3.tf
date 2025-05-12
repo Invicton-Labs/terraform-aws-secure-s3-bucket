@@ -11,7 +11,7 @@ resource "terraform_data" "mfa_delete_serial_number" {
 
 module "assert_mfa_delete_parameters" {
   source        = "Invicton-Labs/assertion/null"
-  version       = "~>0.2.5"
+  version       = "~>0.2.7"
   condition     = var.mfa_delete_enabled ? (var.mfa_delete_serial_number != null && var.mfa_delete_token_code != null) : true
   error_message = "If the `mfa_delete_enabled` variable is `true`, both the `mfa_delete_serial_number` and `mfa_delete_token_code` variables must be provided."
 }
@@ -245,6 +245,29 @@ data "aws_iam_policy_document" "this" {
           statement.value
         ]
       }
+    }
+  }
+
+  dynamic "statement" {
+    for_each = var.enable_shield_drt_access ? [null] : []
+    content {
+      sid    = "AWSDDoSResponseTeamAccessS3Bucket"
+      effect = "Allow"
+      principals {
+        type = "Service"
+        identifiers = [
+          "drt.shield.amazonaws.com"
+        ]
+      }
+      actions = [
+        "s3:GetBucketLocation",
+        "s3:GetObject",
+        "s3:ListBucket",
+      ]
+      resources = [
+        aws_s3_bucket.this.arn,
+        "${aws_s3_bucket.this.arn}/*"
+      ]
     }
   }
 }
