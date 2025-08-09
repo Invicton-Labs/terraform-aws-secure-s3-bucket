@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "this" {
-  bucket              = "${var.name}${var.append_region_suffix ? "-${data.aws_region.current.name}" : ""}"
+  bucket              = "${var.name}${var.append_region_suffix ? "-${data.aws_region.current.region}" : ""}"
   object_lock_enabled = var.object_lock_enabled
   force_destroy       = var.force_destroy
   tags                = var.tags_s3_bucket
