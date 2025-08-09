@@ -91,7 +91,7 @@ output "enable_shield_drt_access" {
 //==================================================
 output "region" {
   description = "The name of the region that the bucket was created in."
-  value       = data.aws_region.current.name
+  value       = data.aws_region.current.region
 }
 
 output "account_id" {
