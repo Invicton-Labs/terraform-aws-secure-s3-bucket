@@ -20,7 +20,8 @@ data "aws_iam_policy_document" "kms" {
 }
 
 resource "aws_kms_key" "this" {
-  count = var.create_new_kms_key ? 1 : 0
+  count  = var.create_new_kms_key ? 1 : 0
+  region = local.region
   depends_on = [
     module.assert_source_kms_key,
   ]
@@ -36,7 +37,8 @@ resource "aws_kms_key" "this" {
 }
 
 resource "aws_kms_replica_key" "this" {
-  count = var.create_replica_kms_key ? 1 : 0
+  count  = var.create_replica_kms_key ? 1 : 0
+  region = local.region
   depends_on = [
     module.assert_source_kms_key,
   ]
@@ -54,6 +56,7 @@ locals {
 
 resource "aws_kms_alias" "this" {
   count         = length(aws_kms_key.this) > 0 || length(aws_kms_replica_key.this) > 0 ? 1 : 0
+  region        = local.region
   name          = "alias/s3/${aws_s3_bucket.this.bucket}"
   target_key_id = local.used_kms_key_arn
 }

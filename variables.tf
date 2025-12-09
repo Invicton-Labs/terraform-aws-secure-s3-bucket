@@ -1,3 +1,10 @@
+variable "region" {
+  description = "The region to deploy the bucket in. If `null`, the provider's region will be used."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
 variable "name" {
   description = "The name to use for the bucket."
   type        = string

@@ -40,7 +40,7 @@ data "aws_iam_policy_document" "outbound_replication" {
         test     = "StringEquals"
         variable = "kms:ViaService"
         values = [
-          "s3.${data.aws_region.current.name}.amazonaws.com",
+          "s3.${local.region}.amazonaws.com",
         ]
       }
       // Only allow decryption if the encryption context is valid
@@ -89,7 +89,7 @@ data "aws_iam_policy_document" "inbound_replication" {
         test     = "StringEquals"
         variable = "kms:ViaService"
         values = [
-          "s3.${data.aws_region.current.name}.amazonaws.com",
+          "s3.${local.region}.amazonaws.com",
         ]
       }
       // Only allow decryption if the encryption context is valid

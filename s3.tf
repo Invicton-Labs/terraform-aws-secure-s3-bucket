@@ -1,5 +1,6 @@
 resource "aws_s3_bucket" "this" {
-  bucket              = "${var.name}${var.append_region_suffix ? "-${data.aws_region.current.region}" : ""}"
+  region              = local.region
+  bucket              = "${var.name}${var.append_region_suffix ? "-${local.region}" : ""}"
   object_lock_enabled = var.object_lock_enabled
   force_destroy       = var.force_destroy
   tags                = var.tags_s3_bucket
@@ -11,7 +12,7 @@ resource "terraform_data" "mfa_delete_serial_number" {
 
 module "assert_mfa_delete_parameters" {
   source        = "Invicton-Labs/assertion/null"
-  version       = "~>0.2.7"
+  version       = "~>0.2.8"
   condition     = var.mfa_delete_enabled ? (var.mfa_delete_serial_number != null && var.mfa_delete_token_code != null) : true
   error_message = "If the `mfa_delete_enabled` variable is `true`, both the `mfa_delete_serial_number` and `mfa_delete_token_code` variables must be provided."
 }
@@ -20,6 +21,7 @@ resource "aws_s3_bucket_versioning" "this" {
   depends_on = [
     module.assert_mfa_delete_parameters
   ]
+  region                = local.region
   bucket                = aws_s3_bucket.this.id
   expected_bucket_owner = data.aws_caller_identity.current.account_id
   versioning_configuration {
@@ -45,6 +47,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
   depends_on = [
     aws_s3_bucket_versioning.this
   ]
+  region                = local.region
   bucket                = aws_s3_bucket.this.id
   expected_bucket_owner = data.aws_caller_identity.current.account_id
   rule {
@@ -60,6 +63,7 @@ resource "aws_s3_bucket_public_access_block" "this" {
   depends_on = [
     aws_s3_bucket_server_side_encryption_configuration.this
   ]
+  region                  = local.region
   bucket                  = aws_s3_bucket.this.id
   block_public_acls       = var.block_public_acls
   block_public_policy     = var.block_public_policy
@@ -71,6 +75,7 @@ resource "aws_s3_bucket_ownership_controls" "this" {
   depends_on = [
     aws_s3_bucket_public_access_block.this
   ]
+  region = local.region
   bucket = aws_s3_bucket.this.id
   rule {
     object_ownership = var.object_ownership
@@ -277,6 +282,7 @@ resource "aws_s3_bucket_policy" "this" {
   depends_on = [
     aws_s3_bucket_ownership_controls.this
   ]
+  region = local.region
   bucket = aws_s3_bucket.this.id
   policy = data.aws_iam_policy_document.this.json
 }
@@ -284,6 +290,7 @@ resource "aws_s3_bucket_policy" "this" {
 resource "aws_s3_bucket_cors_configuration" "this" {
   count                 = length(var.cors_rules) > 0 ? 1 : 0
   depends_on            = [aws_s3_bucket_policy.this]
+  region                = local.region
   bucket                = aws_s3_bucket.this.id
   expected_bucket_owner = data.aws_caller_identity.current.account_id
   dynamic "cors_rule" {
@@ -307,6 +314,7 @@ resource "aws_s3_bucket_accelerate_configuration" "this" {
   depends_on = [
     aws_s3_bucket_cors_configuration.this
   ]
+  region                = local.region
   expected_bucket_owner = data.aws_caller_identity.current.account_id
   bucket                = aws_s3_bucket.this.id
   status                = "Enabled"
