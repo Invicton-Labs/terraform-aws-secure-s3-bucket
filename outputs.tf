@@ -119,6 +119,7 @@ output "bucket" {
         "server_side_encryption_configuration",
         "versioning",
         "website",
+        "website_domain",
     ], k)
   }
 }
