@@ -100,11 +100,26 @@ output "account_id" {
 
 output "bucket" {
   description = "The `aws_s3_bucket` resource that was created."
-  // Must exclude "acceleration_status" to avoid deprecation warnings
+  // Must exclude deprecated attributes to avoid deprecation warnings
   value = {
     for k, v in aws_s3_bucket.this :
     k => v
-    if k != "acceleration_status"
+    if !contains(
+      [
+        "acceleration_status",
+        "acl",
+        "grant",
+        "cors_rule",
+        "lifecycle_rule",
+        "logging",
+        "object_log_configuration",
+        "policy",
+        "replication_configuration",
+        "request_payer",
+        "server_side_encryption_configuration",
+        "versioning",
+        "website",
+    ], k)
   }
 }
 
