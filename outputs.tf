@@ -112,7 +112,7 @@ output "bucket" {
         "cors_rule",
         "lifecycle_rule",
         "logging",
-        "object_log_configuration",
+        "object_lock_configuration",
         "policy",
         "replication_configuration",
         "request_payer",
