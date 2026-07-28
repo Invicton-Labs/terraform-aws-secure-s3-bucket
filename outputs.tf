@@ -120,6 +120,7 @@ output "bucket" {
         "versioning",
         "website",
         "website_domain",
+        "website_endpoint",
     ], k)
   }
 }
