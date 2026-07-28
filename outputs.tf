@@ -100,7 +100,12 @@ output "account_id" {
 
 output "bucket" {
   description = "The `aws_s3_bucket` resource that was created."
-  value       = aws_s3_bucket.this
+  // Must exclude "acceleration_status" to avoid deprecation warnings
+  value = {
+    for k, v in aws_s3_bucket.this :
+    k => v
+    if k != "acceleration_status"
+  }
 }
 
 output "outbound_replication_policy_json" {

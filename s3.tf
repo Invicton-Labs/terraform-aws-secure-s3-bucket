@@ -21,9 +21,8 @@ resource "aws_s3_bucket_versioning" "this" {
   depends_on = [
     module.assert_mfa_delete_parameters
   ]
-  region                = local.region
-  bucket                = aws_s3_bucket.this.id
-  expected_bucket_owner = data.aws_caller_identity.current.account_id
+  region = local.region
+  bucket = aws_s3_bucket.this.id
   versioning_configuration {
     status     = var.versioned ? "Enabled" : "Suspended"
     mfa_delete = var.mfa_delete_enabled ? "Enabled" : "Disabled"
@@ -47,9 +46,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
   depends_on = [
     aws_s3_bucket_versioning.this
   ]
-  region                = local.region
-  bucket                = aws_s3_bucket.this.id
-  expected_bucket_owner = data.aws_caller_identity.current.account_id
+  region = local.region
+  bucket = aws_s3_bucket.this.id
   rule {
     bucket_key_enabled = local.used_kms_key_arn == null ? null : true
     apply_server_side_encryption_by_default {
@@ -288,11 +286,10 @@ resource "aws_s3_bucket_policy" "this" {
 }
 
 resource "aws_s3_bucket_cors_configuration" "this" {
-  count                 = length(var.cors_rules) > 0 ? 1 : 0
-  depends_on            = [aws_s3_bucket_policy.this]
-  region                = local.region
-  bucket                = aws_s3_bucket.this.id
-  expected_bucket_owner = data.aws_caller_identity.current.account_id
+  count      = length(var.cors_rules) > 0 ? 1 : 0
+  depends_on = [aws_s3_bucket_policy.this]
+  region     = local.region
+  bucket     = aws_s3_bucket.this.id
   dynamic "cors_rule" {
     for_each = var.cors_rules
     content {
@@ -314,8 +311,7 @@ resource "aws_s3_bucket_accelerate_configuration" "this" {
   depends_on = [
     aws_s3_bucket_cors_configuration.this
   ]
-  region                = local.region
-  expected_bucket_owner = data.aws_caller_identity.current.account_id
-  bucket                = aws_s3_bucket.this.id
-  status                = "Enabled"
+  region = local.region
+  bucket = aws_s3_bucket.this.id
+  status = "Enabled"
 }
