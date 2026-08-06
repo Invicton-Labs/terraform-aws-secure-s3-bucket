@@ -149,6 +149,18 @@ variable "enable_shield_drt_access" {
   nullable    = false
 }
 
+variable "blocked_encryption_types" {
+  description = "A list of encryption types to block for uploads to this bucket. Valid values are `NONE` (block unencrypted uploads) and `SSE-C` (block client-provided encryption key uploads). Defaults to `[\"NONE\"]` to match AWS's default behavior for new buckets."
+  type        = list(string)
+  default     = ["NONE"]
+  nullable    = false
+
+  validation {
+    condition     = alltrue([for v in var.blocked_encryption_types : contains(["NONE", "SSE-C"], v)])
+    error_message = "Valid values for `blocked_encryption_types` are `NONE` and `SSE-C`."
+  }
+}
+
 variable "cors_rules" {
   description = "A list of CORS rules to apply to the S3 bucket."
   type = list(object({
